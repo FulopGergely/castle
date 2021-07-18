@@ -1,4 +1,4 @@
 # castle
 szamgraf
 
-it needs a live server that can be start with index.html
+it needs a live server that can start with index.html
