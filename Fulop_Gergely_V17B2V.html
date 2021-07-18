@@ -1,0 +1,738 @@
+<!DOCTYPE html>
+<html lang="hu">
+
+
+
+<head>
+    <meta charset=utf-8>
+    <title>Three.js Material Tester</title>
+    <style>
+        body { margin: 0; overflow: hidden; }
+        canvas { width: 100%; height: 100% }
+        #caption {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            width: 50%;
+            text-align: left;
+            z-index: 100;
+            display:block;
+            color: yellow;
+        }
+        #info {
+            position: absolute;
+            top: 30px;
+            right: 10px;
+            text-align: left;
+            z-index: 100;
+            display:block;
+            color: cyan;
+            opacity: 1.0;
+        }
+    </style>
+</head>
+
+<div id="caption">
+    Fülöp Gergely V17B2V TTIK proginfo 2020/21/1
+</div>
+<div id="info">
+    <p id="infopanel">A színtér az egér segítségével körbeforgatható!<br/>
+        "i" betüvel ki/be kapcsolható a szöveg<br/>
+        "n" betüvel ki/be kapcsolható az összes fény<br/>
+        "g" betüvel ki/be kapcsolható a szellem fénye.<br/>
+         <br/>
+
+    </p>
+
+</div>
+
+
+<body>
+
+<script type="module">
+    import * as THREE from './js-r119/build/three.module.js';
+    import { TrackballControls } from './js-r119/examples/jsm/controls/TrackballControls.js';
+    import { GUI } from './js-r119/examples/jsm/libs/dat.gui.module.js';
+    import { OBJLoader } from './js-r119/examples/jsm/loaders/OBJLoader.js';
+
+    // Globális változók
+    var WIDTH, HEIGHT, aspectRatio;
+    var renderer;
+    var scene, camera;
+    var controls;
+    var mesh;
+    var WIDTH, HEIGHT, aspectRatio;
+    var renderer;
+    var scene, camera;
+    var controls;
+    var geometry, material,mesh;
+    var geometryHolder;
+    var container;
+    var ctrl, stats ;
+    var groupUpper;
+    var holder3;
+    var meshLoaded;
+    var meshLoaded2;
+    var infoPanel;
+    var caption;
+    var num =1, num2=1, num3=1;
+    var pontfeny =1;
+    var pointLight;
+    var ambientLight;
+    var pointLightHelper;
+    var sLight;
+    var sphereMateriall;
+
+
+    //
+    // Code from Three.js source
+    //
+    var data = {
+        ablak_elrejtése : 'i betü',
+        size : 5,
+        height : 2,
+        curveSegments : 12,
+        font : "gentilis",
+        weight : "regular",
+        nappal : false,
+        bevelThickness : 1,
+        bevelSize : 0.5
+    };
+
+    var fonts = [
+        "helvetiker",
+        "optimer",
+        "gentilis",
+        "droid/droid_serif"
+    ];
+
+    var weights = [
+        "regular", "bold"
+    ];
+
+    loader('obj/fal.obj');
+    loader2('obj/tree.obj');
+    //init();
+    //animate();
+
+    function loader(path) {
+        var loader = new OBJLoader();
+        loader.load(
+            // Forrás URL
+            path,
+            // Modell betöltése utáni függvény
+            function ( loaded ) {
+                meshLoaded = loaded;
+                meshLoaded.scale.set( 0.2, 0.2, 0.2 );
+
+
+
+                // Anyag hozzárendelés
+                meshLoaded.traverse( function ( child ) {
+                    if ( child instanceof THREE.Mesh ) {
+                        var mat = new THREE.MeshPhongMaterial(  {color: 0xD2D1CD, side: THREE.DoubleSide} );
+                        child.position.set(-50,0,-150);//x=-bal+jobb y=+fel,-le z=+közel,-távol
+                        child.material = mat;
+
+                    }
+                } );
+
+                init();
+            },
+            // Betöltés előrehaladása közben hívódik
+            function ( xhr ) {
+                console.log( ( xhr.loaded / xhr.total * 100 ) + '% loaded' );
+            },
+            // Hibás betöltés esetén
+            function ( error ) {
+                console.log( 'An error happened' );
+            });
+
+
+    }
+    function loader2(path) {
+        var loader2 = new OBJLoader();
+        loader2.load(
+            // Forrás URL
+            path,
+            // Modell betöltése utáni függvény
+            function ( loaded ) {
+                meshLoaded2 = loaded;
+                meshLoaded2.scale.set( 1, 1, 1 );
+
+
+
+                // Anyag hozzárendelés
+                meshLoaded2.traverse( function ( child ) {
+                    if ( child instanceof THREE.Mesh ) {
+                        var mat = new THREE.MeshPhongMaterial(  {color: 0xffffff, side: THREE.DoubleSide} );
+                        child.position.set(40,1,-10);//x=-bal+jobb y=+fel,-le z=+közel,-távol
+                        child.material = mat;
+                    }
+                } );
+
+                //init();
+            },
+            // Betöltés előrehaladása közben hívódik
+            function ( xhr ) {
+                console.log( ( xhr.loaded / xhr.total * 100 ) + '% loaded' );
+            },
+            // Hibás betöltés esetén
+            function ( error ) {
+                console.log( 'An error happened' );
+            });
+
+
+    }
+    /*
+    var meshController = function () {
+        this.rotationObject = 0.01;
+        this.isGlobalRotation = false;
+        this.colorBox = material.color.getHex();
+        this.resetObject = function() {
+            meshBox.rotation.y = 0;
+        };
+        this.resetGlobal = function() {
+            geometryHolder.rotation.y = 0;
+        };
+    };
+
+     */
+/*
+    function addControlGui( controlObject ) {
+        var gui = new GUI( { autoPlace: false });
+        //gui.add( controlObject, 'resetObject' );
+        gui.domElement.style.position = 'absolute';
+        gui.domElement.style.top = '0px';
+        gui.domElement.style.right = '0px';
+        document.body.appendChild( gui.domElement );
+    }*/
+
+    function setInfoPanelText( msg ) { //ezzel módosítjuk a szöveget.
+        infoPanel.innerHTML = msg;
+    }
+
+
+    function handleKeyDown( event ) {
+        console.log( 'keydown: ' + event.keyCode );
+
+        if(event.keyCode == 73 ){
+            console.log("i");
+            if(1==num%2){
+                setInfoPanelText("");
+            }else{
+                setInfoPanelText("<p id=\"infopanel\">A színtér az egér segítségével körbeforgatható!<br/>\n" +
+                    "        \"i\" betüvel ki/be kapcsolható a szöveg.<br/>\n" +
+                    "        \"n\" betüvel ki/be kapcsolható az összes fény.<br/>\n" +
+                    "        \"g\" betüvel ki/be kapcsolható a szellem fénye.<br/>\n" +
+                    "         <br/> ");
+            }
+            num=num+1;
+        }
+
+        if(event.keyCode == 78){
+            if(1==num2%2){
+                console.log("n");
+                pointLight.intensity=0;
+                ambientLight.intensity=0;
+
+            }else{
+                pointLight.intensity=1;
+                ambientLight.intensity=0.1;
+
+            }
+            num2=num2+1;
+        }
+        if(event.keyCode == 71 ){
+            if(1==num3%2){
+                sphereMateriall = new THREE.MeshBasicMaterial( { wireframe: false } );
+                sphereMateriall.color = new THREE.Color( 0xffffff );
+                sLight.intensity=0;
+            }else{
+                sLight.intensity=1;
+            }
+            num3 = num3+1;
+            console.log("g");
+
+        }
+
+
+    }
+
+    function init() {
+        infoPanel = document.getElementById( 'infopanel' ); //értéket adunk neki
+        // Böngésző ablakméret lekérése és méretarány számítása
+        HEIGHT = window.innerHeight;
+        WIDTH = window.innerWidth;
+        aspectRatio = WIDTH / HEIGHT;
+
+        // Renderer létrehozása és DOM-hoz adása
+        renderer = new THREE.WebGLRenderer( { antialias: true } );
+        renderer.setSize( WIDTH, HEIGHT );
+        renderer.setClearColor( 0x000000 );
+        document.body.appendChild( renderer.domElement );
+
+        // Színtér létrehozása
+        scene = new THREE.Scene();
+
+        // Kamera létrehozása és vetítési paramétereinek beállítása
+        camera = new THREE.PerspectiveCamera( 75, aspectRatio, 0.1, 1000 );
+        camera.position.set( 90, 60, 0 ); //x=-bal+jobb y=+fel,-le z=+közel,-távol
+        camera.lookAt( scene.position );
+
+        //key
+        window.addEventListener( 'keydown', handleKeyDown );
+
+        var textureLoader = new THREE.TextureLoader();
+        var texture = textureLoader.load( 'fu.png' );
+        //var falMat = new THREE.MeshPhongMaterial({map: texture});
+
+        //Talaj
+        var groundGeometry = new THREE.PlaneGeometry( 100, 100 );
+        var groundMaterial = new THREE.MeshPhongMaterial( {
+            map: texture,
+            //color: 0x008000,
+            wireframe: false,
+            side: THREE.DoubleSide
+        } );
+        var groundMesh = new THREE.Mesh( groundGeometry, groundMaterial );
+        groundMesh.rotation.x = -1.0 * THREE.MathUtils.degToRad( 90 );
+        groundMesh.castShadow = false; //képes lesz árnyékot vetni
+        groundMesh.receiveShadow = true; //megjeleníti a felszínén az rányékot
+        scene.add( groundMesh );
+
+        //fény
+        pointLight = new THREE.PointLight( 0xffffff, 1 );
+        pointLight.position.set( 10, 20, 30 );
+        scene.add( pointLight );
+        pointLight.castShadow = true;
+        pointLightHelper = new THREE.PointLightHelper( pointLight, 1 );
+        scene.add( pointLightHelper );
+
+        ambientLight = new THREE.AmbientLight( 0x00ffff, 0.1 );
+        scene.add( ambientLight );
+
+
+
+        var boxGeometry = new THREE.BoxGeometry( 4, 4, 10 ,100,100);
+        var boxMaterial = new THREE.MeshPhongMaterial( { color: 0x5A3128, wireframe: false } );
+        var boxMesh = new THREE.Mesh( boxGeometry, boxMaterial );
+        boxMesh.position.set(-4,2,-4); //x=-bal+jobb y=+fel,-le z=+közel,-távol
+        boxMesh.castShadow = true; //képes lsz árnyékot vetni
+        boxMesh.receiveShadow = true; //megjeleníti a felszínén az rányékot
+        scene.add( boxMesh );
+
+
+        var boxGeometry = new THREE.BoxGeometry( 4, 4, 4 ,100,100);
+        var boxMaterial = new THREE.MeshPhongMaterial( { color: 0x92655C, wireframe: false } );
+        var boxMesh = new THREE.Mesh( boxGeometry, boxMaterial );
+        boxMesh.position.set(-4,6,-7);
+        boxMesh.castShadow = true; //képes lesz árnyékot vetni
+        boxMesh.receiveShadow = true; //megjeleníti a felszínén az rányékot
+        scene.add( boxMesh );
+
+        var coneGeometry = new THREE.ConeGeometry( 2.8, 5, 4 ,100,100);
+        var coneMaterial = new THREE.MeshPhongMaterial( { color: 0x5A3128, wireframe: false } );
+        var coneMesh = new THREE.Mesh( coneGeometry, coneMaterial );
+        coneMesh.position.set(-4,10.5,-7);//x=-bal+jobb y=+fel,-le z=+közel,-távol
+        coneMesh.rotation.y = -1.0 * THREE.MathUtils.degToRad( 45 );
+        coneMesh.castShadow = true; //képes lesz árnyékot vetni
+        coneMesh.receiveShadow = true; //megjeleníti a felszínén az rányékot
+        scene.add( coneMesh );
+
+
+
+        //Óra
+
+        var geometry = new THREE.CircleGeometry( 1, 60 );
+        var material = new THREE.MeshPhongMaterial( { color: 0xffffff, wireframe: false  } );
+        var circle = new THREE.Mesh( geometry, material );
+        circle.rotation.y = 1.0 * THREE.MathUtils.degToRad( 90 );
+        circle.position.set(-1.9,6,-7);//x=-bal+jobb y=+fel,-le z=+közel,-távol
+        circle.castShadow = false; //képes lesz árnyékot vetni
+        circle.receiveShadow = true; //megjeleníti a felszínén az rányékot
+        scene.add( circle );
+
+        var geometry = new THREE.PlaneGeometry( 1.1, 0.1,1,1 );
+        var material = new THREE.MeshPhongMaterial( {color: 0x000000, wireframe: false } );
+        var plane = new THREE.Mesh( geometry, material );
+        plane.rotation.y = 1.0 * THREE.MathUtils.degToRad( 90 );
+        plane.rotation.x = 1.0 * THREE.MathUtils.degToRad( 50 );
+        plane.position.set(-1.8,5.7,-6.7);//x=-bal+jobb y=+fel,-le z=+közel,-távol
+        plane.castShadow = false; //képes lesz árnyékot vetni
+        plane.receiveShadow = true; //megjeleníti a felszínén az rányékot
+        scene.add( plane );
+
+        var geometry = new THREE.PlaneGeometry( 0.7, 0.2,1,1 );
+        var material = new THREE.MeshPhongMaterial( {color: 0x000000, wireframe: false } );
+        var plane = new THREE.Mesh( geometry, material );
+        plane.rotation.y = 1.0 * THREE.MathUtils.degToRad( 90 );
+        plane.rotation.x = 1.0 * THREE.MathUtils.degToRad( 95 );
+        plane.position.set(-1.8,6.4,-7);//x=-bal+jobb y=+fel,-le z=+közel,-távol
+        plane.castShadow = false; //képes lesz árnyékot vetni
+        plane.receiveShadow = true; //megjeleníti a felszínén az rányékot
+        scene.add( plane );
+
+        //templom kereszt
+
+        var geometry = new THREE.PlaneGeometry( 1, 0.1,1,1 );
+        var material = new THREE.MeshPhongMaterial( {color: 0x92655C, side: THREE.DoubleSide, wireframe: false } );
+        var plane = new THREE.Mesh( geometry, material );
+        plane.position.set(-4,14,-7);//x=-bal+jobb y=+fel,-le z=+közel,-távol
+        plane.castShadow = false; //képes lesz árnyékot vetni
+        plane.receiveShadow = true; //megjeleníti a felszínén az rányékot
+        scene.add( plane );
+
+        var geometry = new THREE.PlaneGeometry( 1.5, 0.1,1,1 );
+        var material = new THREE.MeshPhongMaterial( {color: 0x92655C, side: THREE.DoubleSide, wireframe: false } );
+        var plane = new THREE.Mesh( geometry, material );
+        plane.rotation.z = 1.0 * THREE.MathUtils.degToRad( 90 );
+        plane.position.set(-4,13.7,-7);//x=-bal+jobb y=+fel,-le z=+közel,-távol
+        plane.castShadow = false; //képes lesz árnyékot vetni
+        plane.receiveShadow = true; //megjeleníti a felszínén az rányékot
+        scene.add( plane );
+
+        //sírkő
+        var geometry = new THREE.BoxGeometry( 0.2, 2.5, 1.5 );
+        var material = new THREE.MeshPhongMaterial( {color: 0xD2D1CD} );
+        var cube = new THREE.Mesh( geometry, material );
+        cube.rotation.y = 1.0 * THREE.MathUtils.degToRad( 90 );
+        cube.position.set(-20,1.5,-20);//x=-bal+jobb y=+fel,-le z=+közel,-távol
+        scene.add( cube );
+
+        var geometry = new THREE.BoxGeometry( 0.2, 0.2, 3 );
+        var material = new THREE.MeshPhongMaterial( {color: 0xD2D1CD} );
+        var cube = new THREE.Mesh( geometry, material );
+        cube.rotation.x = 1.0 * THREE.MathUtils.degToRad( 90 );
+        cube.position.set(-30,1.5,-20);//x=-bal+jobb y=+fel,-le z=+közel,-távol
+        scene.add( cube );
+
+        var geometry = new THREE.BoxGeometry( 0.2, 0.2, 2 );
+        var material = new THREE.MeshPhongMaterial( {color: 0xD2D1CD} );
+        var cube = new THREE.Mesh( geometry, material );
+        cube.rotation.y = 1.0 * THREE.MathUtils.degToRad( 90 );
+        cube.position.set(-30,2,-20);//x=-bal+jobb y=+fel,-le z=+közel,-távol
+        scene.add( cube );
+
+        //föld
+        var geometry = new THREE.BoxGeometry( 0.1, 1.5, 2.5 );
+        var material = new THREE.MeshPhongMaterial( {color: 0x1a0d00} );
+        var cube = new THREE.Mesh( geometry, material );
+        cube.rotation.z = 1.0 * THREE.MathUtils.degToRad( 90 );
+        cube.position.set(-20,0,-18);//x=-bal+jobb y=+fel,-le z=+közel,-távol
+        scene.add( cube );
+
+        var geometry = new THREE.BoxGeometry( 0.1, 1.5, 2.5 );
+        var material = new THREE.MeshPhongMaterial( {color: 0x1a0d00} );
+        var cube = new THREE.Mesh( geometry, material );
+        cube.rotation.z = 1.0 * THREE.MathUtils.degToRad( 90 );
+        cube.position.set(-30,0,-18);//x=-bal+jobb y=+fel,-le z=+közel,-távol
+        scene.add( cube );
+
+        //kút
+        var geometry = new THREE.CylinderGeometry( 1, 1, 1.5, 32 );
+        var material = new THREE.MeshPhongMaterial( {color: 0xD2D1CD} );
+        var cylinder = new THREE.Mesh( geometry, material );
+        cylinder.position.set(30,0.5,-18);//x=-bal+jobb y=+fel,-le z=+közel,-távol
+        scene.add( cylinder );
+
+        var geometry = new THREE.BoxGeometry( 0.1, 0.1, 2 );
+        var material = new THREE.MeshPhongMaterial( {color: 0xD2D1CD} );
+        var cube = new THREE.Mesh( geometry, material );
+        cube.rotation.x = 1.0 * THREE.MathUtils.degToRad( 90 );
+        cube.position.set(29.1,1.5,-18);//x=-bal+jobb y=+fel,-le z=+közel,-távol
+        scene.add( cube );
+
+        var geometry = new THREE.BoxGeometry( 0.1, 0.1, 2 );
+        var material = new THREE.MeshPhongMaterial( {color: 0xD2D1CD} );
+        var cube = new THREE.Mesh( geometry, material );
+        cube.rotation.x = 1.0 * THREE.MathUtils.degToRad( 90 );
+        cube.position.set(30.9,1.5,-18);//x=-bal+jobb y=+fel,-le z=+közel,-távol
+        scene.add( cube );
+
+        var coneGeometry = new THREE.ConeGeometry( 1, 2, 32 );
+        var coneMaterial = new THREE.MeshBasicMaterial( { color: 0x1a0d00 } );
+        var coneMesh = new THREE.Mesh( coneGeometry, coneMaterial );
+        coneMesh.position.set(30,3.3,-18);//x=-bal+jobb y=+fel,-le z=+közel,-távol
+        scene.add( coneMesh );
+
+        //szellem
+
+
+
+        var cylGeometry = new THREE.CylinderGeometry( 0.6, 0.6, 1, 32 );
+        var cylMaterial = new THREE.MeshPhongMaterial( { color: 0xffffff } );
+        var cylMesh = new THREE.Mesh( cylGeometry, cylMaterial );
+        cylMesh.position.set(-19,3,-5);//x=-bal+jobb y=+fel,-le z=+közel,-távol
+        scene.add( cylMesh );
+
+        var sphereGeometry = new THREE.SphereGeometry( 0.6, 32, 32, 32 );
+        var sphereMaterial = new THREE.MeshPhongMaterial( { color: 0xffffff } );
+        var sphereMesh = new THREE.Mesh( sphereGeometry, sphereMaterial );
+        sphereMesh.position.set(-19,3.5,-5);//x=-bal+jobb y=+fel,-le z=+közel,-távol
+        scene.add( sphereMesh );
+
+        sLight = new THREE.SpotLight( 0xffffff, 1 );
+        sLight.position.set( -19,5,-5 );
+        sLight.angle = Math.PI / 7;
+        sLight.target = cylMesh;
+        sLight.castShadow = true;
+        scene.add( sLight );
+
+
+
+
+
+        //kezei
+        var cylGeometry = new THREE.CylinderGeometry( 0.1, 0.1, 1, 32 );
+        var cylMaterial = new THREE.MeshPhongMaterial( { color: 0xffffff } );
+        var cylMesh = new THREE.Mesh( cylGeometry, cylMaterial );
+        cylMesh.rotation.z = 1.0 * THREE.MathUtils.degToRad( 45 );
+        cylMesh.position.set(-18.2,3,-5);//x=-bal+jobb y=+fel,-le z=+közel,-távol
+        scene.add( cylMesh );
+
+        var cylGeometry = new THREE.CylinderGeometry( 0.1, 0.1, 1, 32 );
+        var cylMaterial = new THREE.MeshPhongMaterial( { color: 0xffffff } );
+        var cylMesh = new THREE.Mesh( cylGeometry, cylMaterial );
+        cylMesh.rotation.z = 1.0 * THREE.MathUtils.degToRad( 135 );
+        cylMesh.position.set(-19.8,3,-5);//x=-bal+jobb y=+fel,-le z=+közel,-távol
+        scene.add( cylMesh );
+
+        //arc
+        var geometry = new THREE.CircleGeometry( 0.1,20,0, 6.3 );
+        var material = new THREE.MeshPhongMaterial( { color: 0x000000 } );
+        var circle = new THREE.Mesh( geometry, material );
+        circle.position.set(-19.2,3.5,-4.3);//x=-bal+jobb y=+fel,-le z=+közel,-távol
+        scene.add( circle );
+
+        var geometry = new THREE.CircleGeometry( 0.1,20,0, 6.3 );
+        var material = new THREE.MeshPhongMaterial( { color: 0x000000 } );
+        var circle = new THREE.Mesh( geometry, material );
+        circle.position.set(-18.7,3.5,-4.3);//x=-bal+jobb y=+fel,-le z=+közel,-távol
+        scene.add( circle );
+
+        //kofal
+        var textureLoader = new THREE.TextureLoader();
+        var texture = textureLoader.load( 'kofal.jpg' );
+        //var falMat = new THREE.MeshPhongMaterial({map: texture});
+
+        var boxGeometry = new THREE.BoxGeometry( 50, 7, 2 ); // hossz,magasság,vastag
+        var falMat = new THREE.MeshPhongMaterial({map: texture});
+        var boxMesh = new THREE.Mesh( boxGeometry, falMat );
+        boxMesh.position.set(-10,3.5,-35);//x=-bal+jobb y=+fel,-le z=+közel,-távol
+        scene.add( boxMesh );
+
+        var boxGeometry = new THREE.BoxGeometry( 15, 7, 2 ); // hossz,magasság,vastag
+        var falMat = new THREE.MeshPhongMaterial({map: texture});
+        var boxMesh = new THREE.Mesh( boxGeometry, falMat );
+        boxMesh.position.set(14,3.5,-5);//x=-bal+jobb y=+fel,-le z=+közel,-távol
+        boxMesh.rotation.y = 1.0 * THREE.MathUtils.degToRad( 90 );
+        scene.add( boxMesh );
+
+        var boxGeometry = new THREE.BoxGeometry( 15, 7, 2 ); // hossz,magasság,vastag
+        var falMat = new THREE.MeshPhongMaterial({map: texture});
+        var boxMesh = new THREE.Mesh( boxGeometry, falMat );
+        boxMesh.position.set(14,3.5,-28);//x=-bal+jobb y=+fel,-le z=+közel,-távol
+        boxMesh.rotation.y = 1.0 * THREE.MathUtils.degToRad( 90 );
+        scene.add( boxMesh );
+
+        var boxGeometry = new THREE.BoxGeometry( 50, 7, 2 ); // hossz,magasság,vastag
+        var falMat = new THREE.MeshPhongMaterial({map: texture});
+        var boxMesh = new THREE.Mesh( boxGeometry, falMat );
+        boxMesh.position.set(-10,3.5,5);//x=-bal+jobb y=+fel,-le z=+közel,-távol
+        scene.add( boxMesh );
+
+        var boxGeometry = new THREE.BoxGeometry( 40, 7, 2 ); // hossz,magasság,vastag
+        var falMat = new THREE.MeshPhongMaterial({map: texture});
+        var boxMesh = new THREE.Mesh( boxGeometry, falMat );
+        boxMesh.position.set(-34,3.5,-15);//x=-bal+jobb y=+fel,-le z=+közel,-távol
+        boxMesh.rotation.y = 1.0 * THREE.MathUtils.degToRad( 90 );
+        scene.add( boxMesh );
+
+        //var bejarat
+        var boxGeometry = new THREE.BoxGeometry( 5, 10, 5 ); // hossz,magasság,vastag
+        var falMat = new THREE.MeshPhongMaterial({map: texture});
+        var boxMesh = new THREE.Mesh( boxGeometry, falMat );
+        boxMesh.position.set(14,3.5,-10);//x=-bal+jobb y=+fel,-le z=+közel,-távol
+        scene.add( boxMesh );
+
+        var boxGeometry = new THREE.BoxGeometry( 5, 10, 5 ); // hossz,magasság,vastag
+        var falMat = new THREE.MeshPhongMaterial({map: texture});
+        var boxMesh = new THREE.Mesh( boxGeometry, falMat );
+        boxMesh.position.set(14,3.5,-22);//x=-bal+jobb y=+fel,-le z=+közel,-távol
+        scene.add( boxMesh );
+
+        var boxGeometry = new THREE.BoxGeometry( 5, 3, 10 ); // hossz,magasság,vastag
+        var falMat = new THREE.MeshPhongMaterial({map: texture});
+        var boxMesh = new THREE.Mesh( boxGeometry, falMat );
+        boxMesh.position.set(14,7,-16);//x=-bal+jobb y=+fel,-le z=+közel,-távol
+        scene.add( boxMesh );
+
+        //bejárat kupola
+        var geometry = new THREE.ConeGeometry( 4, 7, 30 );
+        var falMat = new THREE.MeshPhongMaterial({map: texture});
+        var cone = new THREE.Mesh( geometry, falMat );
+        cone.position.set(14,12,-10);//x=-bal+jobb y=+fel,-le z=+közel,-távol
+        scene.add( cone );
+
+        var geometry = new THREE.ConeGeometry( 4, 7, 30 );
+        var falMat = new THREE.MeshPhongMaterial({map: texture});
+        var cone = new THREE.Mesh( geometry, falMat );
+        cone.position.set(14,12,-22);//x=-bal+jobb y=+fel,-le z=+közel,-távol
+        scene.add( cone );
+
+
+        //torony
+        var boxGeometry = new THREE.BoxGeometry( 6, 30, 6 ); // hossz,magasság,vastag
+        var falMat = new THREE.MeshPhongMaterial({map: texture});
+        var boxMesh = new THREE.Mesh( boxGeometry, falMat );
+        boxMesh.position.set(-34,3.5,-35);//x=-bal+jobb y=+fel,-le z=+közel,-távol
+        scene.add( boxMesh );
+
+        //kupola
+        var geometry = new THREE.ConeGeometry( 6, 10, 10 );
+        var falMat = new THREE.MeshPhongMaterial({map: texture});
+        var cone = new THREE.Mesh( geometry, falMat );
+        cone.position.set(-34,23,-35);//x=-bal+jobb y=+fel,-le z=+közel,-távol
+        scene.add( cone );
+
+        //torony
+        var boxGeometry = new THREE.BoxGeometry( 6, 30, 6 ); // hossz,magasság,vastag
+        var falMat = new THREE.MeshPhongMaterial({map: texture});
+        var boxMesh = new THREE.Mesh( boxGeometry, falMat );
+        boxMesh.position.set(-34,3.5,5);//x=-bal+jobb y=+fel,-le z=+közel,-távol
+        scene.add( boxMesh );
+        //kupola
+        var geometry = new THREE.ConeGeometry( 6, 10, 10 );
+        var falMat = new THREE.MeshPhongMaterial({map: texture});
+        var cone = new THREE.Mesh( geometry, falMat );
+        cone.position.set(-34,23,5);//x=-bal+jobb y=+fel,-le z=+közel,-távol
+        scene.add( cone );
+
+        //torony
+        var boxGeometry = new THREE.BoxGeometry( 6, 30, 6 ); // hossz,magasság,vastag
+        var falMat = new THREE.MeshPhongMaterial({map: texture});
+        var boxMesh = new THREE.Mesh( boxGeometry, falMat );
+        boxMesh.position.set(14,3.5,-35);//x=-bal+jobb y=+fel,-le z=+közel,-távol
+        scene.add( boxMesh );
+        //kupola
+        var geometry = new THREE.ConeGeometry( 6, 10, 10 );
+        var falMat = new THREE.MeshPhongMaterial({map: texture});
+        var cone = new THREE.Mesh( geometry, falMat );
+        cone.position.set(14,23,-35);//x=-bal+jobb y=+fel,-le z=+közel,-távol
+        scene.add( cone );
+
+        //torony
+        var boxGeometry = new THREE.BoxGeometry( 6, 30, 6 ); // hossz,magasság,vastag
+        var falMat = new THREE.MeshPhongMaterial({map: texture});
+        var boxMesh = new THREE.Mesh( boxGeometry, falMat );
+        boxMesh.position.set(14,3.5,5);//x=-bal+jobb y=+fel,-le z=+közel,-távol
+        scene.add( boxMesh );
+        //kupola
+        var geometry = new THREE.ConeGeometry( 6, 10, 10 );
+        var falMat = new THREE.MeshPhongMaterial({map: texture});
+        var cone = new THREE.Mesh( geometry, falMat );
+        cone.position.set(14,23,5);//x=-bal+jobb y=+fel,-le z=+közel,-távol
+        scene.add( cone );
+
+
+
+
+
+
+
+
+
+
+
+
+
+        //nap
+        var sphereGeometry = new THREE.SphereGeometry( 1, 32, 32 );
+        sphereMateriall = new THREE.MeshBasicMaterial( { color: 0xffff00, wireframe: false } );
+        sphereMateriall = new THREE.MeshBasicMaterial( { wireframe: false } );
+        //sphereMateriall.color = new THREE.Color( 0xffffff );
+        var sphereMesh = new THREE.Mesh( sphereGeometry, sphereMateriall );
+        sphereMesh.position.set(-60,30,10);//x-jobb,bal y=le,fel z=közel,távol
+        sphereMesh.castShadow = true; //képes lesz árnyékot vetni
+        sphereMesh.receiveShadow = true; //megjeleníti a felszínén az rányékot
+        boxMesh.add( sphereMesh );
+
+
+
+        geometryHolder = new THREE.Object3D();
+        geometryHolder.add( sphereMesh );
+        scene.add( geometryHolder );
+
+
+
+
+
+
+
+
+
+
+
+
+        //var axesHelper = new THREE.AxesHelper( 10 );
+        //scene.add( axesHelper );
+
+        scene.add(mesh);
+
+        scene.add(meshLoaded);
+        scene.add(meshLoaded2);
+
+
+        //addControlGui( ctrl );
+
+
+        //generateTextGeometry();
+
+        // Az ablak későbbi átméretezése esetén visszahívható függvény megadása
+        window.addEventListener( 'resize', handleWindowResize, false );
+
+
+
+        // Kamera vezérlés
+        controls = new TrackballControls( camera, renderer.domElement );
+        controls.rotateSpeed = 5.0;
+        controls.panSpeed = 1.0;
+
+        animate();
+    }
+
+    function handleWindowResize() {
+        // Az ablak átméretezése esetén a kamera vetítési paraméterek újraszámolása
+        HEIGHT = window.innerHeight;
+        WIDTH = window.innerWidth;
+        console.log( 'WIDTH=' + WIDTH + '; HEIGHT=' + HEIGHT );
+        renderer.setSize( WIDTH, HEIGHT );
+        aspectRatio = WIDTH / HEIGHT;
+        camera.aspect = aspectRatio;
+        camera.updateProjectionMatrix();
+
+        render();
+    }
+
+    function animate() {
+        // Újabb képkocka rajzolásának kérése.
+        // Maximálisan 60 FPS-t biztosít a rendszer.
+        requestAnimationFrame( animate );
+        geometryHolder.rotation.y += 0.01;
+        controls.update();
+
+
+        render();
+    }
+
+    function render() {
+        //scene.fog = new THREE.FogExp2( 0x808080, 0.02 ); //köd
+        // 3D -> 2D vetített kép kiszámítása.
+        // scene 3D színtér képe a camera kamera szemszögéből.
+        renderer.render( scene, camera );
+    }
+
+</script>
+</body>
+</html>

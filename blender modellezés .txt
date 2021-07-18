@@ -1,0 +1,18 @@
+fa:
+
+Kocka Objctumból lett elkészítve, Edit módban a “Inset Faces” és “Extrude Region” eszközöket használtam, ezzel alakítottam ki az egész fa kinézetét.
+Ágait ollóval vágtam, néha Smooth eszközzel szűkítettem a fa ágait.
+
+vár:
+
+Kocka objectumból indultam el.
+Edit módban "ctrl+b"-vel a kocka sarkait lekerekítettem.
+Object módban a "shift+d"-vel duplikáltam 2 szer. (egymás mellé leraktam 3-at)
+Wireframe nézetben megfotam az egyik kocka oldalát és meghosszabítottam.
+ctrl+i-vel csoportosítottam a kockákat.
+Sokszorosítottam a modifier properties->Add modifier->Array-el, és falakat készítettem.
+legvégén a falakat "g" segítségével összeillesztettem, forgatást "r" billnetyűvel.
+
+
+ 
+
